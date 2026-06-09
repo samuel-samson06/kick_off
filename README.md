@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Match Reminder (working name)
 
-## Getting Started
+A lightweight football reminder platform that notifies users before their selected teams play.
 
-First, run the development server:
+No accounts. No noise. Just match reminders.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Core Idea
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Users:
+1. Enter email
+2. Verify via magic link
+3. Select up to 5 teams
+4. Receive match reminders before kickoff
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## ⚡ Key Features (MVP)
 
-To learn more about Next.js, take a look at the following resources:
+- Email-based authentication (magic link)
+- Team selection (max 5)
+- Match dashboard (next fixtures)
+- Email reminders:
+  - 24 hours before match
+  - 1 hour before match
+  - Kickoff reminder
+- Simple settings page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧭 User Flow
 
-## Deploy on Vercel
+1. `/email` → Enter email
+2. Verify via magic link
+3. `/teams` → Select favorite teams (if first time)
+4. `/dashboard` → View upcoming matches
+5. `/settings` → Manage notifications
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🖥️ Screens
+
+- Email Onboarding
+- Team Selection
+- Dashboard
+- Settings
+- Empty State (no teams selected)
+
+---
+
+## 🏗️ Tech Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase (Auth + DB)
+- Resend (Email service)
+- Football API (fixtures data)
+
+---
+
+## 🧪 Development Phases
+
+### Phase 1: UI (NO backend)
+- Static screens
+- Dummy data
+- Fully responsive UI
+
+### Phase 2: Auth
+- Supabase magic link login
+- Session handling
+
+### Phase 3: Core Logic
+- Team selection persistence
+- Dashboard data mapping
+
+### Phase 4: Notifications
+- Scheduled email reminders
+- Fixture-based triggers
+
+---
+
+## 📦 Project Structure
+
+- `/app` → routes
+- `/components` → reusable UI
+- `/lib` → helpers + dummy data
+- `/services` → API + Supabase logic
+
+---
