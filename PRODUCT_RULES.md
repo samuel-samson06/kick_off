@@ -1,0 +1,20 @@
+MAX_TEAMS = 5
+
+DEFAULT_REMINDERS:
+- 24h
+- 1h
+- kickoff
+
+AUTH_METHOD:
+- Supabase Magic Link
+
+NAVIGATION:
+- Dashboard
+- Teams
+- Settings
+
+NO_PAID_PLANS_V1
+
+NO_PUSH_NOTIFICATIONS_V1
+
+EMAIL_ONLY_V1

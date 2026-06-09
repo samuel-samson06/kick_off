@@ -1,9 +1,25 @@
+"use client";
+
+import { useState } from "react";
 import { LuCheck, LuSearch, LuArrowRight, LuUsers } from "react-icons/lu";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { nationalTeams, popularClubs, selectedTeams } from "@/lib/teams";
 
 export default function TeamsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const query = searchQuery.toLowerCase().trim();
+
+  const filteredClubs = popularClubs.filter(
+    (team) => !query || team.name.toLowerCase().includes(query),
+  );
+
+  const filteredNations = nationalTeams.filter(
+    (team) => !query || team.name.toLowerCase().includes(query),
+  );
+
+  const noResults = query && filteredClubs.length === 0 && filteredNations.length === 0;
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <Header />
@@ -27,13 +43,15 @@ export default function TeamsPage() {
               <LuSearch className="h-5 w-5 shrink-0 text-zinc-400" />
               <input
                 type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for teams, leagues, or countries..."
                 className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500 sm:text-base"
               />
             </label>
           </div>
 
-          <SectionHeading title="Selected Teams" action="2 / 5 selected" />
+          <SectionHeading title="Selected Teams" action={`${selectedTeams.length} / 5 selected`} />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {selectedTeams.length ? (
               selectedTeams.map((team) => <SelectedTeamCard key={team.name} {...team} />)
@@ -42,28 +60,47 @@ export default function TeamsPage() {
             )}
           </div>
 
-          <SectionHeading title="Team Discovery" action="View All" />
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {popularClubs.map((team) => (
-              <DiscoveryCard key={team.name} name={team.name} selected={team.selected} />
-            ))}
-          </div>
-
-          <div className="pt-2">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">National Teams</h2>
-              <div className="flex items-center gap-2">
-                <PagerButton label="Previous" />
-                <PagerButton label="Next" />
-              </div>
+          {noResults ? (
+            <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
+              <p className="text-base text-zinc-400">
+                No teams match <span className="text-white">&ldquo;{searchQuery}&rdquo;</span>
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Try a different search term.
+              </p>
             </div>
+          ) : (
+            <>
+              {filteredClubs.length > 0 && (
+                <>
+                  <SectionHeading title="Team Discovery" action="View All" />
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {filteredClubs.map((team) => (
+                      <DiscoveryCard key={team.name} name={team.name} selected={team.selected} />
+                    ))}
+                  </div>
+                </>
+              )}
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {nationalTeams.map((team) => (
-                <NationalTeamCard key={team.name} name={team.name} selected={team.selected} />
-              ))}
-            </div>
-          </div>
+              {filteredNations.length > 0 && (
+                <div className="pt-2">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">National Teams</h2>
+                    <div className="flex items-center gap-2">
+                      <PagerButton label="Previous" />
+                      <PagerButton label="Next" />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    {filteredNations.map((team) => (
+                      <NationalTeamCard key={team.name} name={team.name} selected={team.selected} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="sticky bottom-20 z-10 mt-4 border-t border-white/10 bg-zinc-950/90 pt-4 backdrop-blur-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -82,8 +119,6 @@ export default function TeamsPage() {
           </div>
         </section>
       </main>
-
-      <BottomNav />
     </div>
   );
 }
@@ -99,13 +134,7 @@ function SectionHeading({ title, action }: { title: string; action: string }) {
   );
 }
 
-function SelectedTeamCard({
-  name,
-  league,
-}: {
-  name: string;
-  league: string;
-}) {
+function SelectedTeamCard({ name, league }: { name: string; league: string }) {
   return (
     <article className="rounded-[28px] border border-lime-400/20 bg-[radial-gradient(circle_at_top,rgba(163,230,53,0.14),transparent_42%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(18,18,18,0.98))] p-5">
       <div className="flex items-start justify-between gap-4">
