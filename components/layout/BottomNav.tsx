@@ -30,7 +30,7 @@ export default function BottomNav() {
       <div className="mx-auto grid max-w-7xl grid-cols-3 gap-2 px-4 py-3 sm:px-6 lg:px-8">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = pathname === item.href;
 
           return (
             <Link
