@@ -1,9 +1,36 @@
+"use client";
+
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { LuBellRing, LuChevronRight, LuMail, LuShieldCheck } from "react-icons/lu";
 import { accountEmail, notificationPreferences } from "@/lib/settings";
 import Header from "@/components/layout/Header";
+import ToggleSwitch from "@/components/settings/ToggleSwitch";
+import ChangeEmailModal from "@/components/settings/ChangeEmailModal";
+import ConfirmActionModal from "@/components/settings/ConfirmActionModal";
 
 export default function SettingsPage() {
+  const [toggles, setToggles] = useState(notificationPreferences.map((n) => n.enabled));
+  const [changeEmailOpen, setChangeEmailOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const handleToggle = (index: number) => {
+    setToggles((prev) => {
+      const next = [...prev];
+      next[index] = !next[index];
+      return next;
+    });
+  };
+
+  const handleLogout = () => {
+    window.location.href = "/auth/email";
+  };
+
+  const handleDelete = () => {
+    window.location.href = "/auth/email";
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <Header />
@@ -16,13 +43,20 @@ export default function SettingsPage() {
           title="Notification Delivery"
         >
           <div className="space-y-3">
-            {notificationPreferences.map((item) => (
-              <PreferenceRow
+            {notificationPreferences.map((item, index) => (
+              <div
                 key={item.title}
-                title={item.title}
-                description={item.description}
-                enabled={item.enabled}
-              />
+                className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+              >
+                <div>
+                  <div className="text-lg font-semibold text-white">{item.title}</div>
+                  <p className="mt-1 text-sm text-zinc-300">{item.description}</p>
+                </div>
+                <ToggleSwitch
+                  checked={toggles[index]}
+                  onChange={() => handleToggle(index)}
+                />
+              </div>
             ))}
           </div>
           <p className="mt-3 text-xs text-zinc-500">
@@ -39,7 +73,10 @@ export default function SettingsPage() {
               <div className="mt-2 text-lg font-semibold text-white">{accountEmail}</div>
             </div>
 
-            <button className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white transition-colors hover:border-lime-400/40 hover:bg-lime-400/10">
+            <button
+              onClick={() => setChangeEmailOpen(true)}
+              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white transition-colors hover:border-lime-400/40 hover:bg-lime-400/10"
+            >
               Change Email
             </button>
           </div>
@@ -47,11 +84,32 @@ export default function SettingsPage() {
 
         <CardSection icon={<LuShieldCheck className="h-5 w-5" />} title="Account Management">
           <div className="space-y-3">
-            <ActionRow label="Logout" />
-            <ActionRow label="Delete Account" danger helper="Permanent Action" />
+            <ActionRow label="Logout" onClick={() => setLogoutOpen(true)} />
+            <ActionRow label="Delete Account" danger helper="" onClick={() => setDeleteOpen(true)} />
           </div>
         </CardSection>
       </main>
+
+      <ChangeEmailModal open={changeEmailOpen} onClose={() => setChangeEmailOpen(false)} />
+
+      <ConfirmActionModal
+        open={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={handleLogout}
+        title="Logout"
+        description="Are you sure you want to log out? You'll need to sign in again to access your teams and reminders."
+        confirmLabel="Logout"
+      />
+
+      <ConfirmActionModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Account"
+        description="This action is permanent. All your teams, reminders, and preferences will be removed."
+        confirmLabel="Delete Account"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -76,44 +134,20 @@ function CardSection({
   );
 }
 
-function PreferenceRow({
-  title,
-  description,
-  enabled,
-}: {
-  title: string;
-  description: string;
-  enabled: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-      <div>
-        <div className="text-lg font-semibold text-white">{title}</div>
-        <p className="mt-1 text-sm text-zinc-300">{description}</p>
-      </div>
-      <div
-        className={[
-          "flex h-8 w-14 items-center rounded-full px-1 transition-colors shrink-0",
-          enabled ? "justify-end bg-lime-400" : "justify-start bg-zinc-700",
-        ].join(" ")}
-      >
-        <span className="h-6 w-6 rounded-full bg-white shadow-sm" />
-      </div>
-    </div>
-  );
-}
-
 function ActionRow({
   label,
   danger,
   helper,
+  onClick,
 }: {
   label: string;
   danger?: boolean;
   helper?: string;
+  onClick: () => void;
 }) {
   return (
     <button
+      onClick={onClick}
       className={[
         "flex w-full items-center justify-between rounded-2xl border px-5 py-4 text-left transition-colors",
         danger
