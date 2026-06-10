@@ -1,27 +1,10 @@
-export const selectedTeams = [
-  {
-    name: "Manchester City",
-    league: "Premier League",
-    selected: true,
-  },
-  {
-    name: "France",
-    league: "National Team",
-    selected: true,
-  },
-];
+import { mockTeams } from "@/lib/mock/football-api";
 
-export const popularClubs = [
-  { name: "Real Madrid", selected: false },
-  { name: "Manchester City", selected: true },
-  { name: "Liverpool", selected: false },
-  { name: "PSG", selected: false },
-  { name: "Bayern Munich", selected: false },
-];
+export const popularClubs: { name: string; selected: boolean }[] = [];
 
-export const nationalTeams = [
-  { name: "Brazil", selected: false },
-  { name: "France", selected: true },
-  { name: "Argentina", selected: false },
-  { name: "England", selected: false },
-];
+export const nationalTeams = mockTeams.map((t) => ({
+  name: t.name,
+  selected: false,
+}));
+
+export const selectedTeams: { name: string; league: string }[] = [];

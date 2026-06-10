@@ -1,48 +1,60 @@
+import { mockTeams, mockMatches } from "@/lib/mock/football-api";
+
+function findTeamName(id: string) {
+  return mockTeams.find((t) => t.id === id)?.name ?? id;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const main = mockMatches[0];
+
 export const mainMatchData = {
-  competition: "UEFA Champions League",
-  venue: "Santiago Bernabéu",
-  status: "Reminder set",
-  homeTeam: "Real Madrid",
-  awayTeam: "Man City",
+  competition: main.competition,
+  venue: "TBD",
+  status: "scheduled",
+  homeTeam: findTeamName(main.homeTeam),
+  awayTeam: findTeamName(main.awayTeam),
   kickoffIn: {
-    days: "02",
-    hours: "14",
-    minutes: "30",
+    days: "00",
+    hours: "00",
+    minutes: "00",
   },
-  date: "May 17, 2024",
-  time: "21:00 Local Time",
+  date: formatDate(main.kickoff),
+  time: formatTime(main.kickoff),
 };
 
-export const teamData = [
-  { name: "Real Madrid", active: true },
-  { name: "France", active: true },
-  { name: "Arsenal", active: false },
-  { name: "Follow", active: false, isAdd: true },
+type TeamItem = {
+  name: string;
+  active: boolean;
+  isAdd?: boolean;
+};
+
+export const teamData: TeamItem[] = [
+  ...mockTeams.slice(0, 3).map((t, i) => ({
+    name: t.name,
+    active: i < 2,
+  })),
+  { name: "Add Team", active: false, isAdd: true },
 ];
 
-export const upcomingMatchesData = [
-  {
-    league: "Premier League",
-    homeTeam: "Arsenal",
-    awayTeam: "Liverpool",
-    time: "19:30",
-    date: "MAY 18",
-    reminderEnabled: false,
-  },
-  {
-    league: "Ligue 1",
-    homeTeam: "PSG",
-    awayTeam: "Lyon",
-    time: "20:45",
-    date: "MAY 19",
-    reminderEnabled: true,
-  },
-  {
-    league: "Bundesliga",
-    homeTeam: "Bayern",
-    awayTeam: "Dortmund",
-    time: "15:30",
-    date: "MAY 20",
-    reminderEnabled: false,
-  },
-];
+export const upcomingMatchesData = mockMatches.slice(1).map((m) => ({
+  league: m.competition,
+  homeTeam: findTeamName(m.homeTeam),
+  awayTeam: findTeamName(m.awayTeam),
+  time: formatTime(m.kickoff),
+  date: formatDate(m.kickoff).toUpperCase(),
+  reminderEnabled: false,
+}));

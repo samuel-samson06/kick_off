@@ -1,24 +1,67 @@
 "use client";
 
-import { useState } from "react";
-import { LuCheck, LuSearch, LuArrowRight, LuUsers } from "react-icons/lu";
+import { useState, useEffect } from "react";
+import { LuCheck, LuSearch, LuUsers } from "react-icons/lu";
 import Header from "@/components/layout/Header";
-import { nationalTeams, popularClubs, selectedTeams } from "@/lib/teams";
+import { createClient } from "@/lib/supabase/client";
+import { getSubscriptions, addSubscription, removeSubscription } from "@/lib/services/subscriptions";
+import { mockTeams } from "@/lib/mock/football-api";
 
 export default function TeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        setPageLoading(false);
+        return;
+      }
+      setUserId(data.user.id);
+      const ids = await getSubscriptions(data.user.id);
+      setSubscribedTeamIds(ids);
+      setPageLoading(false);
+    }
+    load();
+  }, []);
 
   const query = searchQuery.toLowerCase().trim();
 
-  const filteredClubs = popularClubs.filter(
+  const filteredTeams = mockTeams.filter(
     (team) => !query || team.name.toLowerCase().includes(query),
   );
 
-  const filteredNations = nationalTeams.filter(
-    (team) => !query || team.name.toLowerCase().includes(query),
-  );
+  const noResults = query && filteredTeams.length === 0;
 
-  const noResults = query && filteredClubs.length === 0 && filteredNations.length === 0;
+  const selectedTeams = mockTeams.filter((t) => subscribedTeamIds.includes(t.id));
+
+  const handleTeamClick = async (teamId: string) => {
+    if (!userId) return;
+
+    const isSelected = subscribedTeamIds.includes(teamId);
+
+    if (isSelected) {
+      setSubscribedTeamIds((prev) => prev.filter((id) => id !== teamId));
+      try {
+        await removeSubscription(userId, teamId);
+      } catch {
+        setSubscribedTeamIds((prev) => [...prev, teamId]);
+      }
+    } else {
+      if (subscribedTeamIds.length >= 5) return;
+
+      setSubscribedTeamIds((prev) => [...prev, teamId]);
+      try {
+        await addSubscription(userId, teamId);
+      } catch {
+        setSubscribedTeamIds((prev) => prev.filter((id) => id !== teamId));
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -54,13 +97,15 @@ export default function TeamsPage() {
           <SectionHeading title="Selected Teams" action={`${selectedTeams.length} / 5 selected`} />
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {selectedTeams.length ? (
-              selectedTeams.map((team) => <SelectedTeamCard key={team.name} {...team} />)
+              selectedTeams.map((team) => (
+                <SelectedTeamCard key={team.id} name={team.name} />
+              ))
             ) : (
-              <EmptyState message="No teams selected yet. Pick up to five teams to start receiving reminders." />
+              <EmptyState message={pageLoading ? "Loading..." : "No teams selected yet. Pick up to five teams to start receiving reminders."} />
             )}
           </div>
 
-          {noResults ? (
+          {pageLoading ? null : noResults ? (
             <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-base text-zinc-400">
                 No teams match <span className="text-white">&ldquo;{searchQuery}&rdquo;</span>
@@ -70,51 +115,31 @@ export default function TeamsPage() {
               </p>
             </div>
           ) : (
-            <>
-              {filteredClubs.length > 0 && (
-                <>
-                  <SectionHeading title="Team Discovery" action="View All" />
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {filteredClubs.map((team) => (
-                      <DiscoveryCard key={team.name} name={team.name} selected={team.selected} />
-                    ))}
-                  </div>
-                </>
-              )}
+            <div className="pt-2">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">National Teams</h2>
+              </div>
 
-              {filteredNations.length > 0 && (
-                <div className="pt-2">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-white">National Teams</h2>
-                    <div className="flex items-center gap-2">
-                      <PagerButton label="Previous" />
-                      <PagerButton label="Next" />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {filteredNations.map((team) => (
-                      <NationalTeamCard key={team.name} name={team.name} selected={team.selected} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {filteredTeams.map((team) => (
+                  <NationalTeamCard
+                    key={team.id}
+                    name={team.name}
+                    selected={subscribedTeamIds.includes(team.id)}
+                    onClick={() => handleTeamClick(team.id)}
+                    disabled={!subscribedTeamIds.includes(team.id) && subscribedTeamIds.length >= 5}
+                  />
+                ))}
+              </div>
+            </div>
           )}
 
           <div className="sticky bottom-20 z-10 mt-4 border-t border-white/10 bg-zinc-950/90 pt-4 backdrop-blur-sm">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 text-lime-400">
-                <LuUsers className="h-5 w-5" />
-                <span className="text-sm font-bold uppercase tracking-[0.22em]">
-                  {selectedTeams.length} / 5 selected
-                </span>
-              </div>
-
-              <button className="inline-flex items-center justify-center gap-3 rounded-2xl bg-lime-400 px-6 py-4 text-lg font-bold text-zinc-950 transition-opacity hover:opacity-90 sm:min-w-[220px]">
-                Save Teams
-                <LuArrowRight className="h-5 w-5" />
-              </button>
+            <div className="flex items-center gap-3 text-lime-400">
+              <LuUsers className="h-5 w-5" />
+              <span className="text-sm font-bold uppercase tracking-[0.22em]">
+                {selectedTeams.length} / 5 selected
+              </span>
             </div>
           </div>
         </section>
@@ -134,12 +159,12 @@ function SectionHeading({ title, action }: { title: string; action: string }) {
   );
 }
 
-function SelectedTeamCard({ name, league }: { name: string; league: string }) {
+function SelectedTeamCard({ name }: { name: string }) {
   return (
     <article className="rounded-[28px] border border-lime-400/20 bg-[radial-gradient(circle_at_top,rgba(163,230,53,0.14),transparent_42%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(18,18,18,0.98))] p-5">
       <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">{league}</div>
+        <div>
+          <div className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">National Team</div>
           <div className="text-2xl font-black text-white">{name}</div>
         </div>
         <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-lime-400 text-zinc-950">
@@ -150,40 +175,27 @@ function SelectedTeamCard({ name, league }: { name: string; league: string }) {
   );
 }
 
-function DiscoveryCard({ name, selected }: { name: string; selected: boolean }) {
+function NationalTeamCard({
+  name,
+  selected,
+  onClick,
+  disabled,
+}: {
+  name: string;
+  selected: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
-      className={[
-        "flex items-center justify-between rounded-[24px] border px-4 py-4 text-left transition-colors",
-        selected
-          ? "border-lime-400/60 bg-lime-400/10"
-          : "border-white/10 bg-zinc-900/70 hover:border-white/20 hover:bg-white/5",
-      ].join(" ")}
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/5 text-zinc-200">
-          <ClubMark />
-        </div>
-        <div>
-          <div className="text-base font-semibold text-white">{name}</div>
-          <div className="text-xs uppercase tracking-[0.2em] text-zinc-400">Club</div>
-        </div>
-      </div>
-      <span className={selected ? "text-lime-400" : "text-zinc-400"}>
-        {selected ? <LuCheck className="h-5 w-5" /> : <LuSearch className="h-5 w-5" />}
-      </span>
-    </button>
-  );
-}
-
-function NationalTeamCard({ name, selected }: { name: string; selected: boolean }) {
-  return (
-    <button
+      onClick={onClick}
+      disabled={disabled && !selected}
       className={[
         "flex items-center justify-between rounded-2xl border px-4 py-4 transition-colors",
         selected
           ? "border-lime-400/60 bg-lime-400/10"
           : "border-white/10 bg-zinc-900/70 hover:border-white/20 hover:bg-white/5",
+        disabled ? "opacity-40 cursor-not-allowed" : "",
       ].join(" ")}
     >
       <div className="flex items-center gap-3">
@@ -204,30 +216,6 @@ function EmptyState({ message }: { message: string }) {
     <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-6 text-sm text-zinc-400 sm:col-span-2 xl:col-span-3">
       {message}
     </div>
-  );
-}
-
-function PagerButton({ label }: { label: string }) {
-  return (
-    <button
-      aria-label={label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors hover:border-lime-400/30 hover:bg-lime-400/5 hover:text-white"
-    >
-      <span className="text-xl leading-none">{label === "Previous" ? "‹" : "›"}</span>
-    </button>
-  );
-}
-
-function ClubMark() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-      <path
-        d="M12 2l7 3v6c0 5-3.2 9.4-7 11-3.8-1.6-7-6-7-11V5l7-3z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
