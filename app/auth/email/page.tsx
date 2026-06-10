@@ -1,6 +1,7 @@
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { IoFootball } from "react-icons/io5"
+import EmailForm from "@/components/auth/EmailForm"
 
 export default function EmailOnboarding() {
   return (
@@ -21,25 +22,7 @@ export default function EmailOnboarding() {
             Get match reminders delivered directly to your inbox.
           </p>
 
-          <div className="w-full space-y-4">
-            <div className="relative">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-4 py-3.5 bg-zinc-900 border border-zinc-700 text-white rounded-xl placeholder:text-gray-500 pr-12 outline-none focus:ring-2 focus:ring-lime-400/50 transition-shadow"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-mono text-lg">
-                @
-              </span>
-            </div>
-
-            <button className="w-full py-3.5 bg-lime-400 hover:bg-lime-500 text-black font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors">
-              Continue
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+          <EmailForm />
 
           <p className="text-xs  md:text-sm text-gray-500 flex items-center justify-center gap-2">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -8,13 +8,15 @@ import Header from "@/components/layout/Header";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import ChangeEmailModal from "@/components/settings/ChangeEmailModal";
 import ConfirmActionModal from "@/components/settings/ConfirmActionModal";
+import { createClient } from "@/lib/supabase/client";
+
 
 export default function SettingsPage() {
   const [toggles, setToggles] = useState(notificationPreferences.map((n) => n.enabled));
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
+  
   const handleToggle = (index: number) => {
     setToggles((prev) => {
       const next = [...prev];
@@ -22,15 +24,17 @@ export default function SettingsPage() {
       return next;
     });
   };
-
-  const handleLogout = () => {
+  
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
     window.location.href = "/auth/email";
   };
-
+  
   const handleDelete = () => {
     window.location.href = "/auth/email";
   };
-
+  
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <Header />
