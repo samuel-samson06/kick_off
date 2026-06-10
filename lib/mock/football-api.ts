@@ -1,0 +1,55 @@
+export const mockTeams = [
+  { id: "nigeria", name: "Nigeria", code: "NGA" },
+  { id: "brazil", name: "Brazil", code: "BRA" },
+  { id: "france", name: "France", code: "FRA" },
+  { id: "england", name: "England", code: "ENG" },
+  { id: "argentina", name: "Argentina", code: "ARG" },
+  { id: "germany", name: "Germany", code: "GER" },
+  { id: "spain", name: "Spain", code: "ESP" },
+  { id: "portugal", name: "Portugal", code: "POR" },
+  { id: "netherlands", name: "Netherlands", code: "NED" },
+  { id: "italy", name: "Italy", code: "ITA" },
+];
+
+export const mockMatches = [
+  {
+    id: "match_1",
+    homeTeam: "nigeria",
+    awayTeam: "brazil",
+    kickoff: "2026-06-15T20:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
+  {
+    id: "match_2",
+    homeTeam: "france",
+    awayTeam: "england",
+    kickoff: "2026-06-16T18:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
+  {
+    id: "match_3",
+    homeTeam: "argentina",
+    awayTeam: "germany",
+    kickoff: "2026-06-17T16:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
+  {
+    id: "match_4",
+    homeTeam: "spain",
+    awayTeam: "portugal",
+    kickoff: "2026-06-18T20:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
+  {
+    id: "match_5",
+    homeTeam: "netherlands",
+    awayTeam: "italy",
+    kickoff: "2026-06-19T14:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
+];

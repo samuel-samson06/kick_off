@@ -8,9 +8,18 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
+    if (!error && data.user) {
+      await supabase.from("profiles").upsert(
+        {
+          id: data.user.id,
+          email: data.user.email,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
