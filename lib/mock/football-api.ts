@@ -52,4 +52,12 @@ export const mockMatches = [
     competition: "World Cup",
     status: "scheduled",
   },
+  {
+    id: "match_6",
+    homeTeam: "nigeria",
+    awayTeam: "france",
+    kickoff: "2026-06-12T14:00:00Z",
+    competition: "World Cup",
+    status: "scheduled",
+  },
 ];
