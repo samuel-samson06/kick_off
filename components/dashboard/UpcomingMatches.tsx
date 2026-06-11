@@ -1,7 +1,17 @@
 import { LuBell } from "react-icons/lu";
-import { upcomingMatchesData } from "@/lib/dashboard";
 
-export default function UpcomingMatches() {
+type Match = {
+  league: string;
+  homeTeam: string;
+  awayTeam: string;
+  time: string;
+  date: string;
+  reminderEnabled: boolean;
+};
+
+export default function UpcomingMatches({ matches }: { matches: Match[] }) {
+  if (matches.length === 0) return null;
+
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2 text-xl font-bold text-white">
@@ -10,7 +20,7 @@ export default function UpcomingMatches() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-3">
-        {upcomingMatchesData.map((match) => (
+        {matches.map((match) => (
           <article
             key={`${match.league}-${match.homeTeam}-${match.awayTeam}`}
             className="rounded-3xl border border-white/10 bg-zinc-900/75 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { LuBellRing, LuChevronRight, LuMail, LuShieldCheck } from "react-icons/lu";
 import { accountEmail, notificationPreferences } from "@/lib/settings";
@@ -9,32 +9,51 @@ import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import ChangeEmailModal from "@/components/settings/ChangeEmailModal";
 import ConfirmActionModal from "@/components/settings/ConfirmActionModal";
 import { createClient } from "@/lib/supabase/client";
-
+import { getPreferences, savePreferences } from "@/lib/services/preferences";
 
 export default function SettingsPage() {
-  const [toggles, setToggles] = useState(notificationPreferences.map((n) => n.enabled));
+  const [toggles, setToggles] = useState([true, true, false]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  
-  const handleToggle = (index: number) => {
-    setToggles((prev) => {
-      const next = [...prev];
-      next[index] = !next[index];
-      return next;
+
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      setUserId(data.user.id);
+      const prefs = await getPreferences(data.user.id);
+      setToggles([prefs.notify_24h, prefs.notify_1h, prefs.notify_kickoff]);
+    }
+    load();
+  }, []);
+
+  const handleToggle = async (index: number) => {
+    if (!userId) return;
+
+    const next = [...toggles];
+    next[index] = !next[index];
+    setToggles(next);
+
+    await savePreferences(userId, {
+      notify_24h: next[0],
+      notify_1h: next[1],
+      notify_kickoff: next[2],
     });
   };
-  
+
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/auth/email";
   };
-  
+
   const handleDelete = () => {
     window.location.href = "/auth/email";
   };
-  
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <Header />

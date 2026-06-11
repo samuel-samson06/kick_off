@@ -1,10 +1,10 @@
 import { mockTeams, mockMatches } from "@/lib/mock/football-api";
 
-function findTeamName(id: string) {
+export function findTeamName(id: string) {
   return mockTeams.find((t) => t.id === id)?.name ?? id;
 }
 
-function formatDate(iso: string) {
+export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -12,7 +12,7 @@ function formatDate(iso: string) {
   });
 }
 
-function formatTime(iso: string) {
+export function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",

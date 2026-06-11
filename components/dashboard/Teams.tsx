@@ -1,7 +1,8 @@
 import { LuPlus, LuStar } from "react-icons/lu";
-import { teamData } from "@/lib/dashboard";
 
-export default function Teams() {
+export default function Teams({ teams }: { teams: { name: string; active: boolean; isAdd?: boolean }[] }) {
+  if (teams.length === 0) return null;
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -15,7 +16,7 @@ export default function Teams() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {teamData.map((team) => (
+        {teams.map((team) => (
           <div
             key={team.name}
             className={[
