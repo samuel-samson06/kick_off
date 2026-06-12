@@ -76,4 +76,12 @@ export const mockMatches = [
     competition: "World Cup Semi Final",
     status: "scheduled",
   },
+  {
+    id: "match_9",
+    homeTeam: "estonia",
+    awayTeam: "spain",
+    kickoff: "2026-06-12T18:02:00Z",
+    competition: "World Cup Semi Final",
+    status: "scheduled",
+  },
 ];

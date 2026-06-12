@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mockMatches } from "@/lib/mock/football-api";
+import { sendReminderEmail } from "@/lib/email/sendReminderEmail";
 
 export type ReminderCandidate = {
   userId: string;
@@ -119,13 +120,19 @@ export async function processNotifications(): Promise<ReminderCandidate[]> {
   const pending = await filterAlreadySent(candidates);
 
   for (const candidate of pending) {
-    await createNotificationLog(candidate);
+    try {
+      await sendReminderEmail(candidate);
+      await createNotificationLog(candidate);
+    } catch (err) {
+      console.error(
+        `[notificationEngine] Failed to send ${candidate.notificationType} reminder for match ${candidate.matchId} to ${candidate.email}:`,
+        err,
+      );
+    }
   }
 
   return pending;
 }
-
-// Future: export async function sendReminderEmail(candidate: ReminderCandidate): Promise<void>
 
 
 
