@@ -60,4 +60,20 @@ export const mockMatches = [
     competition: "World Cup",
     status: "scheduled",
   },
+  {
+    id: "match_7",
+    homeTeam: "brazil",
+    awayTeam: "argentina",
+    kickoff: "2026-06-11T15:00:00Z",
+    competition: "World Cup Semi Final",
+    status: "scheduled",
+  },
+  {
+    id: "match_8",
+    homeTeam: "england",
+    awayTeam: "spain",
+    kickoff: "2026-06-11T14:02:00Z",
+    competition: "World Cup Semi Final",
+    status: "scheduled",
+  },
 ];
