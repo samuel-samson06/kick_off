@@ -78,10 +78,14 @@ export default function EmailForm() {
         disabled={loading}
         className="w-full py-3.5 bg-lime-400 hover:bg-lime-500 disabled:opacity-50 text-black font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors"
       >
-        {loading ? "Sending..." : "Continue"}
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
+        {loading ? (
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-zinc-950 border-t-transparent" />
+        ) : (
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        )}
+        {loading ? "Sending" : "Continue"}
       </button>
     </form>
   );

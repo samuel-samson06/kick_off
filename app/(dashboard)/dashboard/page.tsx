@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getSubscriptions } from "@/lib/services/subscriptions";
 import { getMatches } from "@/lib/services/football";
 import { findTeamName, formatDate, formatTime, getCountdown } from "@/lib/dashboard";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function DashboardPage() {
   const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
@@ -98,8 +99,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-zinc-950 text-white">
         <Header />
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-28 pt-4 sm:px-6 lg:px-8">
-          <p className="text-zinc-400">Loading your dashboard...</p>
+        <main className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-5 px-4 pb-28 pt-24 sm:px-6 lg:px-8">
+          <LoadingSpinner text="Loading your dashboard..." />
         </main>
       </div>
     );

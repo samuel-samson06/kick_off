@@ -5,6 +5,7 @@ import { LuCheck, LuSearch, LuUsers } from "react-icons/lu";
 import Header from "@/components/layout/Header";
 import { createClient } from "@/lib/supabase/client";
 import { getSubscriptions, addSubscription, removeSubscription } from "@/lib/services/subscriptions";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 
 export default function TeamsPage() {
@@ -107,7 +108,7 @@ export default function TeamsPage() {
                 <SelectedTeamCard key={team.id} name={team.name} />
               ))
             ) : (
-              <EmptyState message={pageLoading ? "Loading..." : "No teams selected yet. Pick up to five teams to start receiving reminders."} />
+              pageLoading ? <LoadingSpinner size="sm" /> : <EmptyState message="No teams selected yet. Pick up to five teams to start receiving reminders." />
             )}
           </div>
 
