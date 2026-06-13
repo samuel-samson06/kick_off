@@ -53,11 +53,11 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
 
     const types: { type: "24h" | "1h" | "kickoff"; prefKey: string }[] = [];
 
-    if (diffMinutes <= 1440 && diffMinutes > 1425) {
+    if (diffMinutes <= 1470 && diffMinutes > 1380) {
       types.push({ type: "24h", prefKey: "notify_24h" });
-    } else if (diffMinutes <= 60 && diffMinutes > 45) {
+    } else if (diffMinutes <= 75 && diffMinutes > 30) {
       types.push({ type: "1h", prefKey: "notify_1h" });
-    } else if (diffMinutes <= 5 && diffMinutes >= 0) {
+    } else if (diffMinutes <= 10 && diffMinutes >= 0) {
       types.push({ type: "kickoff", prefKey: "notify_kickoff" });
     }
 

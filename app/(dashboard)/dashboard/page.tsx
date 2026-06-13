@@ -8,7 +8,7 @@ import UpcomingMatches from "@/components/dashboard/UpcomingMatches";
 import { createClient } from "@/lib/supabase/client";
 import { getSubscriptions } from "@/lib/services/subscriptions";
 import { getMatches } from "@/lib/services/football";
-import { findTeamName, formatDate, formatTime } from "@/lib/dashboard";
+import { findTeamName, formatDate, formatTime, getCountdown } from "@/lib/dashboard";
 
 export default function DashboardPage() {
   const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [matches, setMatches] = useState<
     { id: string; homeTeam: string; awayTeam: string; kickoff: string; competition: string; status: string }[]
   >([]);
+  const [kickoffIn, setKickoffIn] = useState({ days: "00", hours: "00", minutes: "00" });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,8 +46,24 @@ export default function DashboardPage() {
       subscribedTeamIds.includes(m.homeTeam) || subscribedTeamIds.includes(m.awayTeam),
   );
 
-  const mainMatch = userMatches[0] ?? null;
-  const restMatches = userMatches.slice(1);
+  const upcoming = userMatches
+    .filter((m) => m.status !== "finished")
+    .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+  const finished = userMatches
+    .filter((m) => m.status === "finished")
+    .sort((a, b) => new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime());
+
+  const mainMatch = upcoming[0] ?? finished[0] ?? null;
+  const restMatches = [...upcoming.slice(1), ...finished];
+
+  useEffect(() => {
+    function update() {
+      if (mainMatch) setKickoffIn(getCountdown(mainMatch.kickoff));
+    }
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, [mainMatch]);
 
   const matchData = mainMatch
     ? {
@@ -55,7 +72,7 @@ export default function DashboardPage() {
         status: "scheduled",
         homeTeam: findTeamName(mainMatch.homeTeam, teams),
         awayTeam: findTeamName(mainMatch.awayTeam, teams),
-        kickoffIn: { days: "00", hours: "00", minutes: "00" },
+        kickoffIn,
         date: formatDate(mainMatch.kickoff),
         time: formatTime(mainMatch.kickoff),
       }

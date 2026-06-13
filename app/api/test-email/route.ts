@@ -4,9 +4,12 @@ import { sendReminderEmail } from "@/lib/email/sendReminderEmail";
 export async function GET() {
   await sendReminderEmail({
     userId: "test-user",
-    email: "some_random_dude@yopmail.com",
+    email: "a.samuelsamson123@gmail.com",
     matchId: "match_test",
     notificationType: "1h",
+    homeTeam: "Brazil",
+    awayTeam: "Morocco",
+    kickoffTime: "2026-06-13T22:00:00.000Z",
   });
 
   return NextResponse.json({

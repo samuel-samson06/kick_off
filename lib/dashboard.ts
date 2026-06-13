@@ -19,3 +19,14 @@ export function formatTime(iso: string) {
     minute: "2-digit",
   });
 }
+
+export function getCountdown(kickoff: string) {
+  const diff = new Date(kickoff).getTime() - Date.now();
+  if (diff <= 0) return { days: "00", hours: "00", minutes: "00" };
+  const totalMinutes = Math.floor(diff / 60_000);
+  return {
+    days: String(Math.floor(totalMinutes / 1440)).padStart(2, "0"),
+    hours: String(Math.floor((totalMinutes % 1440) / 60)).padStart(2, "0"),
+    minutes: String(totalMinutes % 60).padStart(2, "0"),
+  };
+}
