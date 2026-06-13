@@ -1,9 +1,4 @@
-import { mockTeams, mockMatches } from "@/lib/mock/football-api";
+import { getTeams as apiGetTeams, getMatches as apiGetMatches } from "./football-api";
 
-export async function getTeams() {
-  return mockTeams;
-}
-
-export async function getMatches() {
-  return mockMatches;
-}
+export const getTeams = apiGetTeams;
+export const getMatches = apiGetMatches;

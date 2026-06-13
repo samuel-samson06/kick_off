@@ -5,13 +5,14 @@ import { LuCheck, LuSearch, LuUsers } from "react-icons/lu";
 import Header from "@/components/layout/Header";
 import { createClient } from "@/lib/supabase/client";
 import { getSubscriptions, addSubscription, removeSubscription } from "@/lib/services/subscriptions";
-import { mockTeams } from "@/lib/mock/football-api";
+
 
 export default function TeamsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
+  const [teams, setTeams] = useState<{ id: string; name: string; code: string }[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -22,8 +23,13 @@ export default function TeamsPage() {
         return;
       }
       setUserId(data.user.id);
-      const ids = await getSubscriptions(data.user.id);
+      const [ids, teamsRes] = await Promise.all([
+        getSubscriptions(data.user.id),
+        fetch("/api/teams"),
+      ]);
+      const allTeams = await teamsRes.json();
       setSubscribedTeamIds(ids);
+      setTeams(allTeams);
       setPageLoading(false);
     }
     load();
@@ -31,13 +37,13 @@ export default function TeamsPage() {
 
   const query = searchQuery.toLowerCase().trim();
 
-  const filteredTeams = mockTeams.filter(
+  const filteredTeams = teams.filter(
     (team) => !query || team.name.toLowerCase().includes(query),
   );
 
   const noResults = query && filteredTeams.length === 0;
 
-  const selectedTeams = mockTeams.filter((t) => subscribedTeamIds.includes(t.id));
+  const selectedTeams = teams.filter((t) => subscribedTeamIds.includes(t.id));
 
   const handleTeamClick = async (teamId: string) => {
     if (!userId) return;

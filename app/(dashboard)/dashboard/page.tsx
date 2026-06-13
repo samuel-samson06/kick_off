@@ -7,11 +7,15 @@ import Teams from "@/components/dashboard/Teams";
 import UpcomingMatches from "@/components/dashboard/UpcomingMatches";
 import { createClient } from "@/lib/supabase/client";
 import { getSubscriptions } from "@/lib/services/subscriptions";
-import { mockTeams, mockMatches } from "@/lib/mock/football-api";
+import { getMatches } from "@/lib/services/football";
 import { findTeamName, formatDate, formatTime } from "@/lib/dashboard";
 
 export default function DashboardPage() {
   const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
+  const [teams, setTeams] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [matches, setMatches] = useState<
+    { id: string; homeTeam: string; awayTeam: string; kickoff: string; competition: string; status: string }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,17 +23,24 @@ export default function DashboardPage() {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
       if (data.user) {
-        const ids = await getSubscriptions(data.user.id);
+        const [ids, teamsRes, allMatches] = await Promise.all([
+          getSubscriptions(data.user.id),
+          fetch("/api/teams"),
+          getMatches(),
+        ]);
+        const allTeams = await teamsRes.json();
         setSubscribedTeamIds(ids);
+        setTeams(allTeams);
+        setMatches(allMatches);
       }
       setLoading(false);
     }
     load();
   }, []);
 
-  const subscribedTeams = mockTeams.filter((t) => subscribedTeamIds.includes(t.id));
+  const subscribedTeams = teams.filter((t) => subscribedTeamIds.includes(t.id));
 
-  const userMatches = mockMatches.filter(
+  const userMatches = matches.filter(
     (m) =>
       subscribedTeamIds.includes(m.homeTeam) || subscribedTeamIds.includes(m.awayTeam),
   );
@@ -42,8 +53,8 @@ export default function DashboardPage() {
         competition: mainMatch.competition,
         venue: "TBD",
         status: "scheduled",
-        homeTeam: findTeamName(mainMatch.homeTeam),
-        awayTeam: findTeamName(mainMatch.awayTeam),
+        homeTeam: findTeamName(mainMatch.homeTeam, teams),
+        awayTeam: findTeamName(mainMatch.awayTeam, teams),
         kickoffIn: { days: "00", hours: "00", minutes: "00" },
         date: formatDate(mainMatch.kickoff),
         time: formatTime(mainMatch.kickoff),
@@ -59,8 +70,8 @@ export default function DashboardPage() {
 
   const upcomingData = restMatches.map((m) => ({
     league: m.competition,
-    homeTeam: findTeamName(m.homeTeam),
-    awayTeam: findTeamName(m.awayTeam),
+    homeTeam: findTeamName(m.homeTeam, teams),
+    awayTeam: findTeamName(m.awayTeam, teams),
     time: formatTime(m.kickoff),
     date: formatDate(m.kickoff).toUpperCase(),
     reminderEnabled: false,

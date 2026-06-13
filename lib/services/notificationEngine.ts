@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { mockMatches } from "@/lib/mock/football-api";
+import { getMatches } from "@/lib/services/football";
 import { sendReminderEmail } from "@/lib/email/sendReminderEmail";
 
 export type ReminderCandidate = {
@@ -7,6 +7,9 @@ export type ReminderCandidate = {
   email: string;
   matchId: string;
   notificationType: "24h" | "1h" | "kickoff";
+  homeTeam: string;
+  awayTeam: string;
+  kickoffTime: string;
 };
 
 export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
@@ -14,7 +17,7 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
 
   const [profilesRes, subsRes, prefsRes] = await Promise.all([
     supabase.from("profiles").select("id, email"),
-    supabase.from("subscriptions").select("user_id, team_id"),
+    supabase.from("subscriptions").select("user_id, team_api_id"),
     supabase.from("notification_preferences").select("*"),
   ]);
 
@@ -24,7 +27,7 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
 
   const userTeams: Record<string, string[]> = {};
   for (const sub of subscriptions) {
-    (userTeams[sub.user_id] ??= []).push(sub.team_id);
+    (userTeams[sub.user_id] ??= []).push(String(sub.team_api_id));
   }
 
   const userPrefs: Record<string, Record<string, boolean>> = {};
@@ -41,10 +44,11 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
     profileByUserId[p.id] = p.email;
   }
 
+  const matches = await getMatches();
   const now = Date.now();
   const candidates: ReminderCandidate[] = [];
 
-  for (const match of mockMatches) {
+  for (const match of matches) {
     const diffMinutes = (new Date(match.kickoff).getTime() - now) / 60_000;
 
     const types: { type: "24h" | "1h" | "kickoff"; prefKey: string }[] = [];
@@ -76,6 +80,9 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
           email,
           matchId: match.id,
           notificationType: type,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          kickoffTime: match.kickoff,
         });
       }
     }
@@ -111,7 +118,6 @@ export async function createNotificationLog(
     user_id: candidate.userId,
     match_id: candidate.matchId,
     notification_type: candidate.notificationType,
-    sent_at: new Date().toISOString(),
   });
 }
 
@@ -133,89 +139,3 @@ export async function processNotifications(): Promise<ReminderCandidate[]> {
 
   return pending;
 }
-
-
-
-// # Optimize Subscription Lookup for Scalability
-
-// ## Goal
-
-// Refactor subscription lookup logic to improve performance for large datasets.
-
-// Current implementation checks every user and verifies if they are subscribed to a match team.
-
-// This does not scale efficiently for large user bases.
-
-// ---
-
-// ## Current Pattern (inefficient at scale)
-
-// ```ts id="c1"
-// for each user:
-//   check if user is subscribed to match team
-// ```
-
-// ---
-
-// ## Required Pattern (optimized)
-
-// Invert the lookup model:
-
-// ```text id="c2"
-// team → list of subscribed users
-// ```
-
-// ---
-
-// ## Implementation Steps
-
-// ### 1. Build team index
-
-// Create in-memory map:
-
-// ```ts id="c3"
-// Record<string, string[]>
-// ```
-
-// Where:
-
-// ```text id="c4"
-// key = team_id
-// value = array of user_ids
-// ```
-
-// ---
-
-// ### 2. Process matches first
-
-// For each match:
-
-// * get users subscribed to home team
-// * get users subscribed to away team
-// * merge user lists
-
-// ---
-
-// ### 3. Continue normal processing
-
-// After users are identified:
-
-// * apply notification preferences
-// * apply notification windows
-// * apply deduplication via notification_logs
-
-// ---
-
-// ## Do NOT
-
-// * Do NOT change database schema
-// * Do NOT introduce caching systems yet
-// * Do NOT optimize prematurely beyond this change
-
-// ---
-
-// ## Success Criteria
-
-// * Same output as before
-// * Reduced user iteration complexity
-// * No change in notification correctness
