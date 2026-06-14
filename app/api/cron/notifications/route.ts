@@ -8,15 +8,25 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const result = await processNotifications();
+    const diagnostics = await processNotifications();
     return NextResponse.json({
-      sent: result.length,
+      ...diagnostics,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
     console.error("[cron/notifications]", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
+      {
+        success: false,
+        matchesChecked: 0,
+        subscriptionsChecked: 0,
+        candidatesFound: 0,
+        emailsAttempted: 0,
+        emailsSent: 0,
+        logsCreated: 0,
+        errors: [err instanceof Error ? err.message : "Unknown error"],
+        timestamp: new Date().toISOString(),
+      },
       { status: 500 },
     );
   }

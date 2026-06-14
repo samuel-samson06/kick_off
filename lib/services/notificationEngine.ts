@@ -12,7 +12,22 @@ export type ReminderCandidate = {
   kickoffTime: string;
 };
 
-export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
+export type NotificationDiagnostics = {
+  success: boolean;
+  matchesChecked: number;
+  subscriptionsChecked: number;
+  candidatesFound: number;
+  emailsAttempted: number;
+  emailsSent: number;
+  logsCreated: number;
+  errors: string[];
+};
+
+export async function getReminderCandidates(): Promise<{
+  candidates: ReminderCandidate[];
+  matchesChecked: number;
+  subscriptionsChecked: number;
+}> {
   const supabase = createAdminClient();
 
   const [profilesRes, subsRes, prefsRes] = await Promise.all([
@@ -88,7 +103,11 @@ export async function getReminderCandidates(): Promise<ReminderCandidate[]> {
     }
   }
 
-  return candidates;
+  return {
+    candidates,
+    matchesChecked: matches.length,
+    subscriptionsChecked: subscriptions.length,
+  };
 }
 
 export async function filterAlreadySent(
@@ -105,9 +124,15 @@ export async function filterAlreadySent(
     ),
   );
 
-  return candidates.filter(
+  const result = candidates.filter(
     (c) => !sentLogs.has(`${c.userId}:${c.matchId}:${c.notificationType}`),
   );
+
+  console.log(
+    `[CRON] Filtered ${candidates.length} candidates against sent logs, ${result.length} remaining`,
+  );
+
+  return result;
 }
 
 export async function createNotificationLog(
@@ -121,21 +146,56 @@ export async function createNotificationLog(
   });
 }
 
-export async function processNotifications(): Promise<ReminderCandidate[]> {
-  const candidates = await getReminderCandidates();
+export async function processNotifications(): Promise<NotificationDiagnostics> {
+  console.log("[CRON] Started");
+
+  const { candidates, matchesChecked, subscriptionsChecked } =
+    await getReminderCandidates();
+  console.log(
+    `[CRON] Checking ${matchesChecked} matches against ${subscriptionsChecked} subscriptions`,
+  );
+  console.log(`[CRON] Candidates found: ${candidates.length}`);
+
   const pending = await filterAlreadySent(candidates);
+
+  const diagnostics: NotificationDiagnostics = {
+    success: true,
+    matchesChecked,
+    subscriptionsChecked,
+    candidatesFound: candidates.length,
+    emailsAttempted: pending.length,
+    emailsSent: 0,
+    logsCreated: 0,
+    errors: [],
+  };
 
   for (const candidate of pending) {
     try {
-      await sendReminderEmail(candidate);
-      await createNotificationLog(candidate);
-    } catch (err) {
-      console.error(
-        `[notificationEngine] Failed to send ${candidate.notificationType} reminder for match ${candidate.matchId} to ${candidate.email}:`,
-        err,
+      console.log(
+        `[EMAIL] Sending ${candidate.notificationType} reminder to ${candidate.email} for ${candidate.homeTeam} vs ${candidate.awayTeam}`,
       );
+      await sendReminderEmail(candidate);
+      console.log("[EMAIL] Sent successfully");
+      diagnostics.emailsSent++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[ERROR] Failed to send email: ${msg}`);
+      diagnostics.errors.push(`Email to ${candidate.email}: ${msg}`);
+      continue;
+    }
+
+    try {
+      await createNotificationLog(candidate);
+      console.log("[LOG] Created notification log");
+      diagnostics.logsCreated++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[ERROR] Failed to create log: ${msg}`);
+      diagnostics.errors.push(`Log for match ${candidate.matchId}: ${msg}`);
     }
   }
 
-  return pending;
+  diagnostics.success = diagnostics.errors.length === 0;
+
+  return diagnostics;
 }
