@@ -15,7 +15,7 @@ export default function MainMatch({ matchData }: { matchData: MatchData | null }
   if (!matchData) {
     return (
       <div className="rounded-[28px] border border-dashed border-white/10 bg-zinc-900/50 p-6 text-center">
-        <p className="text-zinc-500 text-sm">Select teams to see your next match.</p>
+        <p className="text-zinc-500 text-sm">No upcoming matches right now.</p>
       </div>
     );
   }

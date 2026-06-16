@@ -5,10 +5,17 @@ import Teams from "@/components/dashboard/Teams";
 import UpcomingMatches from "@/components/dashboard/UpcomingMatches";
 import { createClient } from "@/lib/supabase/server";
 import { getSubscriptionsServer } from "@/lib/services/subscriptions";
-import { findTeamName, formatDate, formatTime, getCountdown } from "@/lib/dashboard";
+import {
+  findTeamName,
+  formatDate,
+  formatTime,
+  getCountdown,
+  selectNextUpcomingMatch,
+} from "@/lib/dashboard";
 import { getDashboardMatches, getDashboardTeams } from "@/lib/data/dashboard";
 
 export default async function DashboardPage() {
+  const nowMs = new Date().getTime();
   const supabase = await createClient();
   const {
     data: { user },
@@ -32,13 +39,13 @@ export default async function DashboardPage() {
   );
 
   const upcoming = userMatches
-    .filter((m) => m.status !== "finished")
+    .filter((m) => m.status !== "finished" && new Date(m.kickoff).getTime() > nowMs)
     .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
   const finished = userMatches
     .filter((m) => m.status === "finished")
     .sort((a, b) => new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime());
 
-  const mainMatch = upcoming[0] ?? null;
+  const mainMatch = selectNextUpcomingMatch(userMatches, nowMs);
   const restMatches = [...upcoming.slice(1), ...finished];
   const kickoffIn = mainMatch ? getCountdown(mainMatch.kickoff) : { days: "00", hours: "00", minutes: "00" };
 

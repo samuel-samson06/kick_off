@@ -30,3 +30,13 @@ export function getCountdown(kickoff: string) {
     minutes: String(totalMinutes % 60).padStart(2, "0"),
   };
 }
+
+export function selectNextUpcomingMatch<T extends { kickoff: string; status: string }>(
+  matches: T[],
+  nowMs: number,
+) {
+  // Only future, non-finished matches can be promoted to MainMatch.
+  return matches
+    .filter((match) => match.status !== "finished" && new Date(match.kickoff).getTime() > nowMs)
+    .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime())[0] ?? null;
+}
