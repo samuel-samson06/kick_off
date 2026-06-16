@@ -21,15 +21,32 @@ function matchApiIdToUuid(apiMatchId: string): string {
 
 export async function getTeams(): Promise<Team[]> {
   const supabase = createAdminClient();
-  const { data } = await supabase.from("teams").select("id, name, code");
+  const { data, error } = await supabase.from("teams").select("id, name, code");
+  if (error) {
+    console.error("[football-api] Failed to load teams:", error);
+    return [];
+  }
   return data ?? [];
 }
 
 export async function getMatches(): Promise<Match[]> {
   try {
-    const res = await fetch(`${BASE}/get/games`);
+    const res = await fetch(`${BASE}/get/games`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    });
+
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!res.ok) {
+      throw new Error(`Upstream returned ${res.status} ${res.statusText}`);
+    }
+    if (!contentType.includes("application/json")) {
+      const preview = (await res.text()).slice(0, 200);
+      throw new Error(`Upstream returned non-JSON content: ${preview}`);
+    }
+
     const json = await res.json();
-    const games = json.games ?? [];
+    const games = Array.isArray(json.games) ? json.games : [];
 
     return games
       .filter(
@@ -43,16 +60,37 @@ export async function getMatches(): Promise<Match[]> {
       err,
     );
     const supabase = createAdminClient();
-    const { data } = await supabase.from("matches").select("*");
+    const { data, error } = await supabase
+      .from("matches")
+      .select("id, home_team_id, away_team_id, kickoff_time, competition, status");
+
+    if (error) {
+      console.error("[football-api] DB fallback failed:", error);
+      return [];
+    }
+
     return (data ?? []).map(dbRowToMatch);
   }
 }
 
 export async function syncMatches(): Promise<number> {
   try {
-    const res = await fetch(`${BASE}/get/games`);
+    const res = await fetch(`${BASE}/get/games`, {
+      headers: { accept: "application/json" },
+      cache: "no-store",
+    });
+
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!res.ok) {
+      throw new Error(`Upstream returned ${res.status} ${res.statusText}`);
+    }
+    if (!contentType.includes("application/json")) {
+      const preview = (await res.text()).slice(0, 200);
+      throw new Error(`Upstream returned non-JSON content: ${preview}`);
+    }
+
     const json = await res.json();
-    const games = json.games ?? [];
+    const games = Array.isArray(json.games) ? json.games : [];
 
     const validGames = games.filter(
       (g: Record<string, string>) =>
@@ -98,8 +136,8 @@ function dbRowToMatch(row: Record<string, unknown>): Match {
     homeTeam: String(row.home_team_id),
     awayTeam: String(row.away_team_id),
     kickoff: String(row.kickoff_time),
-    competition: String(row.competition),
-    status: String(row.status),
+    competition: String(row.competition ?? "World Cup"),
+    status: String(row.status ?? "scheduled"),
   };
 }
 

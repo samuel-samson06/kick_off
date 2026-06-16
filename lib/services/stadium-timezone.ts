@@ -7,7 +7,23 @@ const stadiumTimezone: Record<string, number> = {
 };
 
 export function localDateToUTC(localDate: string, stadiumId: string): string {
-  const [month, day, year, hour, minute] = localDate.split(/[/ :]/);
+  const match = localDate.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)?$/i,
+  );
+
+  if (!match) {
+    throw new Error(`Invalid local date format: ${localDate}`);
+  }
+
+  const [, month, day, year, rawHour, minute, meridiem] = match;
   const offset = stadiumTimezone[stadiumId] ?? -5;
-  return new Date(Date.UTC(+year, +month - 1, +day, +hour - offset, +minute)).toISOString();
+  let hour = Number(rawHour);
+
+  if (meridiem) {
+    const upperMeridiem = meridiem.toUpperCase();
+    if (upperMeridiem === "PM" && hour !== 12) hour += 12;
+    if (upperMeridiem === "AM" && hour === 12) hour = 0;
+  }
+
+  return new Date(Date.UTC(+year, +month - 1, +day, hour - offset, +minute)).toISOString();
 }
