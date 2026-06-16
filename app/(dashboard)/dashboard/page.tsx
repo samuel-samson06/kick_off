@@ -38,7 +38,7 @@ export default async function DashboardPage() {
     .filter((m) => m.status === "finished")
     .sort((a, b) => new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime());
 
-  const mainMatch = upcoming[0] ?? finished[0] ?? null;
+  const mainMatch = upcoming[0] ?? null;
   const restMatches = [...upcoming.slice(1), ...finished];
   const kickoffIn = mainMatch ? getCountdown(mainMatch.kickoff) : { days: "00", hours: "00", minutes: "00" };
 

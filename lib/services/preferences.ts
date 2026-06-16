@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type Preferences = {
   notify_24h: boolean;
@@ -53,6 +54,27 @@ export async function savePreferences(userId: string, prefs: Preferences) {
 
 export async function ensurePreferences(userId: string) {
   const supabase = createClient();
+  const { data } = await supabase
+    .from("notification_preferences")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (data) return;
+
+  const { error } = await supabase.from("notification_preferences").insert({
+    user_id: userId,
+    ...defaults,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Failed to create default preferences:", error);
+  }
+}
+
+export async function ensurePreferencesServer(userId: string) {
+  const supabase = createAdminClient();
   const { data } = await supabase
     .from("notification_preferences")
     .select("user_id")

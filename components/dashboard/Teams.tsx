@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LuPlus, LuStar } from "react-icons/lu";
 
 export default function Teams({ teams }: { teams: { name: string; active: boolean; isAdd?: boolean }[] }) {
@@ -27,14 +28,18 @@ export default function Teams({ teams }: { teams: { name: string; active: boolea
             ].join(" ")}
           >
             {team.isAdd ? (
-              <>
+              <Link
+                href="/dashboard/teams"
+                className="flex h-full w-full flex-col items-center justify-between"
+                aria-label="Add a team"
+              >
                 <div className="mt-10 flex h-8 w-8 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-white/5 text-4xl text-zinc-300">
                   <LuPlus />
                 </div>
                 <div className="mb-6 text-sm font-semibold uppercase tracking-[0.28em] text-zinc-300">
                   {team.name}
                 </div>
-              </>
+              </Link>
             ) : (
               <>
                 <div className="mt-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/5 text-zinc-200">
