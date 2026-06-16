@@ -26,55 +26,81 @@ export async function getTeams(): Promise<Team[]> {
 }
 
 export async function getMatches(): Promise<Match[]> {
-  const res = await fetch(`${BASE}/get/games`);
-  const json = await res.json();
-  const games = json.games ?? [];
+  try {
+    const res = await fetch(`${BASE}/get/games`);
+    const json = await res.json();
+    const games = json.games ?? [];
 
-  return games
-    .filter(
-      (g: Record<string, string>) =>
-        g.home_team_id !== "0" && g.away_team_id !== "0",
-    )
-    .map(mapMatch);
+    return games
+      .filter(
+        (g: Record<string, string>) =>
+          g.home_team_id !== "0" && g.away_team_id !== "0",
+      )
+      .map(mapMatch);
+  } catch (err) {
+    console.error(
+      "[football-api] API fetch failed, falling back to DB:",
+      err,
+    );
+    const supabase = createAdminClient();
+    const { data } = await supabase.from("matches").select("*");
+    return (data ?? []).map(dbRowToMatch);
+  }
 }
 
 export async function syncMatches(): Promise<number> {
-  const res = await fetch(`${BASE}/get/games`);
-  const json = await res.json();
-  const games = json.games ?? [];
+  try {
+    const res = await fetch(`${BASE}/get/games`);
+    const json = await res.json();
+    const games = json.games ?? [];
 
-  const validGames = games.filter(
-    (g: Record<string, string>) =>
-      g.home_team_id !== "0" && g.away_team_id !== "0",
-  );
-
-  if (games.length !== validGames.length) {
-    console.log(
-      `[football-api] Skipped ${games.length - validGames.length} games with TBD team IDs`,
+    const validGames = games.filter(
+      (g: Record<string, string>) =>
+        g.home_team_id !== "0" && g.away_team_id !== "0",
     );
-  }
 
-  const supabase = createAdminClient();
-  const rows = validGames.map((g: Record<string, string>) => ({
-    id: matchApiIdToUuid(g.id),
-    external_match_id: g.id,
-    home_team_id: g.home_team_id,
-    away_team_id: g.away_team_id,
-    kickoff_time: localDateToUTC(g.local_date, g.stadium_id),
-    competition: "World Cup",
-    status: g.finished === "TRUE" ? "finished" : "scheduled",
-  }));
+    if (games.length !== validGames.length) {
+      console.log(
+        `[football-api] Skipped ${games.length - validGames.length} games with TBD team IDs`,
+      );
+    }
 
-  const { error } = await supabase.from("matches").upsert(rows, {
-    onConflict: "id",
-  });
+    const supabase = createAdminClient();
+    const rows = validGames.map((g: Record<string, string>) => ({
+      id: matchApiIdToUuid(g.id),
+      external_match_id: g.id,
+      home_team_id: g.home_team_id,
+      away_team_id: g.away_team_id,
+      kickoff_time: localDateToUTC(g.local_date, g.stadium_id),
+      competition: "World Cup",
+      status: g.finished === "TRUE" ? "finished" : "scheduled",
+    }));
 
-  if (error) {
-    console.error("[football-api] Failed to sync matches:", JSON.stringify(error));
+    const { error } = await supabase.from("matches").upsert(rows, {
+      onConflict: "id",
+    });
+
+    if (error) {
+      console.error("[football-api] Failed to sync matches:", JSON.stringify(error));
+      return 0;
+    }
+
+    return rows.length;
+  } catch (err) {
+    console.error("[football-api] syncMatches failed:", err);
     return 0;
   }
+}
 
-  return rows.length;
+function dbRowToMatch(row: Record<string, unknown>): Match {
+  return {
+    id: String(row.id),
+    homeTeam: String(row.home_team_id),
+    awayTeam: String(row.away_team_id),
+    kickoff: String(row.kickoff_time),
+    competition: String(row.competition),
+    status: String(row.status),
+  };
 }
 
 function mapMatch(g: Record<string, string>): Match {
