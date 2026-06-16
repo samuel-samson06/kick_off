@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Trigger notification endpoint
         run: |
-          curl -sf "${{ secrets.VERCEL_URL }}/api/cron/notifications?key=${{ secrets.CRON_SECRET }}"
+          curl -i "${{ secrets.VERCEL_URL }}/api/cron/notifications?key=${{ secrets.CRON_SECRET }}"
