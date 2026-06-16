@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { LuBellRing, LuChevronRight, LuMail, LuShieldCheck } from "react-icons/lu";
-import { accountEmail, notificationPreferences } from "@/lib/settings";
+import { notificationPreferences } from "@/lib/settings";
 import Header from "@/components/layout/Header";
 import ToggleSwitch from "@/components/settings/ToggleSwitch";
 import ChangeEmailModal from "@/components/settings/ChangeEmailModal";
@@ -14,6 +14,7 @@ import { getPreferences, savePreferences } from "@/lib/services/preferences";
 export default function SettingsPage() {
   const [toggles, setToggles] = useState([true, true, false]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [accountEmail, setAccountEmail] = useState("");
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -24,6 +25,7 @@ export default function SettingsPage() {
       const { data } = await supabase.auth.getUser();
       if (!data.user) return;
       setUserId(data.user.id);
+      setAccountEmail(data.user.email ?? "");
       const prefs = await getPreferences(data.user.id);
       setToggles([prefs.notify_24h, prefs.notify_1h, prefs.notify_kickoff]);
     }
@@ -93,7 +95,9 @@ export default function SettingsPage() {
               <div className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">
                 Current Email
               </div>
-              <div className="mt-2 text-lg font-semibold text-white">{accountEmail}</div>
+              <div className="mt-2 text-lg font-semibold text-white">
+                {accountEmail || "No email available"}
+              </div>
             </div>
 
             <button

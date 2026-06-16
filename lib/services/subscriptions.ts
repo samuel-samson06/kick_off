@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function getSubscriptions(userId: string) {
   const supabase = createClient();
@@ -13,6 +14,21 @@ export async function getSubscriptions(userId: string) {
   }
 
   return data.map((row) => String(row.team_api_id));
+}
+
+export async function getSubscriptionsServer(userId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("team_api_id")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Failed to fetch subscriptions:", error);
+    return [];
+  }
+
+  return (data ?? []).map((row) => String(row.team_api_id));
 }
 
 export async function addSubscription(userId: string, teamId: string) {

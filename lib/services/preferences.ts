@@ -12,6 +12,10 @@ const defaults: Preferences = {
   notify_kickoff: false,
 };
 
+export function getDefaultPreferences(): Preferences {
+  return { ...defaults };
+}
+
 export async function getPreferences(userId: string): Promise<Preferences> {
   const supabase = createClient();
   const { data } = await supabase
@@ -44,5 +48,26 @@ export async function savePreferences(userId: string, prefs: Preferences) {
 
   if (error) {
     console.error("Failed to save preferences:", error);
+  }
+}
+
+export async function ensurePreferences(userId: string) {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("notification_preferences")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (data) return;
+
+  const { error } = await supabase.from("notification_preferences").insert({
+    user_id: userId,
+    ...defaults,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("Failed to create default preferences:", error);
   }
 }

@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { sendReminderEmail } from "@/lib/email/sendReminderEmail";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const to = new URL(req.url).searchParams.get("to");
+
+  if (!to) {
+    return NextResponse.json({ error: "Missing recipient" }, { status: 400 });
+  }
+
   await sendReminderEmail({
     userId: "test-user",
-    email: "a.samuelsamson123@gmail.com",
+    email: to,
     matchId: "match_test",
     notificationType: "1h",
     homeTeam: "Brazil",

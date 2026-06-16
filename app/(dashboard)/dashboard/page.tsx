@@ -1,44 +1,28 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { redirect } from "next/navigation";
 import Header from "@/components/layout/Header";
 import MainMatch from "@/components/dashboard/MainMatch";
 import Teams from "@/components/dashboard/Teams";
 import UpcomingMatches from "@/components/dashboard/UpcomingMatches";
-import { createClient } from "@/lib/supabase/client";
-import { getSubscriptions } from "@/lib/services/subscriptions";
-import { getMatches } from "@/lib/services/football";
+import { createClient } from "@/lib/supabase/server";
+import { getSubscriptionsServer } from "@/lib/services/subscriptions";
 import { findTeamName, formatDate, formatTime, getCountdown } from "@/lib/dashboard";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { getDashboardMatches, getDashboardTeams } from "@/lib/data/dashboard";
 
-export default function DashboardPage() {
-  const [subscribedTeamIds, setSubscribedTeamIds] = useState<string[]>([]);
-  const [teams, setTeams] = useState<{ id: string; name: string; code: string }[]>([]);
-  const [matches, setMatches] = useState<
-    { id: string; homeTeam: string; awayTeam: string; kickoff: string; competition: string; status: string }[]
-  >([]);
-  const [kickoffIn, setKickoffIn] = useState({ days: "00", hours: "00", minutes: "00" });
-  const [loading, setLoading] = useState(true);
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        const [ids, teamsRes, allMatches] = await Promise.all([
-          getSubscriptions(data.user.id),
-          fetch("/api/teams"),
-          getMatches(),
-        ]);
-        const allTeams = await teamsRes.json();
-        setSubscribedTeamIds(ids);
-        setTeams(allTeams);
-        setMatches(allMatches);
-      }
-      setLoading(false);
-    }
-    load();
-  }, []);
+  if (!user) {
+    redirect("/auth/email");
+  }
+
+  const [subscribedTeamIds, teams, matches] = await Promise.all([
+    getSubscriptionsServer(user.id),
+    getDashboardTeams(),
+    getDashboardMatches(),
+  ]);
 
   const subscribedTeams = teams.filter((t) => subscribedTeamIds.includes(t.id));
 
@@ -56,21 +40,13 @@ export default function DashboardPage() {
 
   const mainMatch = upcoming[0] ?? finished[0] ?? null;
   const restMatches = [...upcoming.slice(1), ...finished];
-
-  useEffect(() => {
-    function update() {
-      if (mainMatch) setKickoffIn(getCountdown(mainMatch.kickoff));
-    }
-    update();
-    const id = setInterval(update, 60_000);
-    return () => clearInterval(id);
-  }, [mainMatch]);
+  const kickoffIn = mainMatch ? getCountdown(mainMatch.kickoff) : { days: "00", hours: "00", minutes: "00" };
 
   const matchData = mainMatch
     ? {
         competition: mainMatch.competition,
-        venue: "TBD",
-        status: "scheduled",
+        venue: "Fixture synced from Supabase",
+        status: mainMatch.status === "finished" ? "finished" : "scheduled",
         homeTeam: findTeamName(mainMatch.homeTeam, teams),
         awayTeam: findTeamName(mainMatch.awayTeam, teams),
         kickoffIn,
@@ -94,17 +70,6 @@ export default function DashboardPage() {
     date: formatDate(m.kickoff).toUpperCase(),
     reminderEnabled: false,
   }));
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-white">
-        <Header />
-        <main className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-5 px-4 pb-28 pt-24 sm:px-6 lg:px-8">
-          <LoadingSpinner text="Loading your dashboard..." />
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">

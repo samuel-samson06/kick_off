@@ -15,13 +15,3 @@ export const notificationPreferences = [
     enabled: true,
   },
 ];
-
-export const accountEmail = "user@example.com";
-
-export const reminderOptions = [
-  "15 Minutes Before",
-  "30 Minutes Before",
-  "1 Hour Before",
-  "2 Hours Before",
-  "Custom Time",
-];
