@@ -9,6 +9,8 @@ export type ReminderCandidate = {
   notificationType: "24h" | "1h" | "kickoff";
   homeTeam: string;
   awayTeam: string;
+  homeTeamName: string;
+  awayTeamName: string;
   kickoffTime: string;
 };
 
@@ -30,15 +32,17 @@ export async function getReminderCandidates(): Promise<{
 }> {
   const supabase = createAdminClient();
 
-  const [profilesRes, subsRes, prefsRes] = await Promise.all([
+  const [profilesRes, subsRes, prefsRes, teamsRes] = await Promise.all([
     supabase.from("profiles").select("id, email"),
     supabase.from("subscriptions").select("user_id, team_api_id"),
     supabase.from("notification_preferences").select("*"),
+    supabase.from("teams").select("id, name"),
   ]);
 
   const profiles = profilesRes.data ?? [];
   const subscriptions = subsRes.data ?? [];
   const preferences = prefsRes.data ?? [];
+  const teams = teamsRes.data ?? [];
 
   const userTeams: Record<string, string[]> = {};
   for (const sub of subscriptions) {
@@ -57,6 +61,11 @@ export async function getReminderCandidates(): Promise<{
   const profileByUserId: Record<string, string> = {};
   for (const p of profiles) {
     profileByUserId[p.id] = p.email;
+  }
+
+  const teamNameById: Record<string, string> = {};
+  for (const team of teams) {
+    teamNameById[String(team.id)] = String(team.name);
   }
 
   const matches = await getMatches();
@@ -97,6 +106,8 @@ export async function getReminderCandidates(): Promise<{
           notificationType: type,
           homeTeam: match.homeTeam,
           awayTeam: match.awayTeam,
+          homeTeamName: teamNameById[match.homeTeam] ?? match.homeTeam,
+          awayTeamName: teamNameById[match.awayTeam] ?? match.awayTeam,
           kickoffTime: match.kickoff,
         });
       }
@@ -172,7 +183,7 @@ export async function processNotifications(): Promise<NotificationDiagnostics> {
   for (const candidate of pending) {
     try {
       console.log(
-        `[EMAIL] Sending ${candidate.notificationType} reminder to ${candidate.email} for ${candidate.homeTeam} vs ${candidate.awayTeam}`,
+        `[EMAIL] Sending ${candidate.notificationType} reminder to ${candidate.email} for ${candidate.homeTeamName} vs ${candidate.awayTeamName}`,
       );
       await sendReminderEmail(candidate);
       console.log("[EMAIL] Sent successfully");
