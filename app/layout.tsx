@@ -13,8 +13,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KickOff — Match Reminders",
-  description: "Get match reminders delivered directly to your inbox. Follow your teams and never miss kickoff.",
+  title: {
+    default: "KickOff — Match Reminders",
+    template: "%s | KickOff",
+  },
+  description:
+    "Get match reminders delivered directly to your inbox. Follow your teams and never miss kickoff.",
+  keywords: [
+    "World Cup",
+    "football reminders",
+    "match alerts",
+    "soccer notifications",
+    "KickOff",
+    "2026 World Cup",
+    "match schedule",
+  ],
+  openGraph: {
+    title: "KickOff — Match Reminders",
+    description:
+      "Get match reminders delivered directly to your inbox. Follow your teams and never miss kickoff.",
+    siteName: "KickOff",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "KickOff — Match Reminders",
+    description:
+      "Get match reminders delivered directly to your inbox.",
+  },
 };
 
 export default function RootLayout({
