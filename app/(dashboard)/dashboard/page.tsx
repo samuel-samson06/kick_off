@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LuArrowRight, LuBell } from "react-icons/lu";
 import Header from "@/components/layout/Header";
 import MainMatch from "@/components/dashboard/MainMatch";
 import Teams from "@/components/dashboard/Teams";
@@ -83,17 +85,40 @@ export default async function DashboardPage() {
       <Header />
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-28 pt-4 sm:px-6 lg:px-8">
-        <section>
-          <MainMatch matchData={matchData} />
-        </section>
+        {subscribedTeamIds.length === 0 ? (
+          <section className="mt-16 flex flex-col items-center gap-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-lime-400/10">
+              <LuBell className="h-8 w-8 text-lime-400" />
+            </div>
+            <div className="max-w-md space-y-2">
+              <h2 className="text-2xl font-bold text-white">No teams selected yet</h2>
+              <p className="text-zinc-400">
+                Pick up to 5 teams and we&apos;ll send you reminders before every match.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/teams"
+              className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-6 py-3 font-semibold text-black transition-colors hover:bg-lime-500"
+            >
+              Choose your teams
+              <LuArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
+        ) : (
+          <>
+            <section>
+              <MainMatch matchData={matchData} />
+            </section>
 
-        <section>
-          <Teams teams={teamData} />
-        </section>
+            <section>
+              <Teams teams={teamData} />
+            </section>
 
-        <section>
-          <UpcomingMatches matches={upcomingData} />
-        </section>
+            <section>
+              <UpcomingMatches matches={upcomingData} />
+            </section>
+          </>
+        )}
       </main>
     </div>
   );
