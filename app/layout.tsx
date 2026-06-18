@@ -34,12 +34,14 @@ export const metadata: Metadata = {
       "Get match reminders delivered directly to your inbox. Follow your teams and never miss kickoff.",
     siteName: "KickOff",
     type: "website",
+    images: [{ url: "/kick_off_logo.png", width: 512, height: 512 }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "KickOff — Match Reminders",
     description:
       "Get match reminders delivered directly to your inbox.",
+    images: ["/kick_off_logo.png"],
   },
 };
 
