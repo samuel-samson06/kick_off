@@ -3,7 +3,9 @@ import { processNotifications } from "@/lib/services/notificationEngine";
 
 export async function GET(req: Request) {
   try {
-    const key = req.headers.get("x-cron-secret");
+    const key =
+      req.headers.get("x-cron-secret") ||
+      new URL(req.url).searchParams.get("key");
     if (key !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
