@@ -94,7 +94,7 @@ export async function sendReminderEmail(candidate: ReminderCandidate) {
 
   try {
     const result = await resend.emails.send({
-      from: "KickOff <onboarding@resend.dev>",
+      from: "KickOff <reminders@kickoffreminder.cv>",
       to: candidate.email,
       subject,
       text,
