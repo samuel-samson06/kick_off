@@ -10,7 +10,7 @@ type Preferences = {
 const defaults: Preferences = {
   notify_24h: true,
   notify_1h: true,
-  notify_kickoff: false,
+  notify_kickoff: true,
 };
 
 export function getDefaultPreferences(): Preferences {
