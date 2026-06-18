@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Trigger notification endpoint
         run: |
-          response=$(curl -sS -w "\nHTTP_STATUS:%{http_code}\n" -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "${{ secrets.VERCEL_URL }}/api/cron/notifications")
+          response=$(curl -sS -w "\nHTTP_STATUS:%{http_code}\n" -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" "${{ secrets.VERCEL_URL }}/api/cron/notifications?key=${{ secrets.CRON_SECRET }}")
           echo "$response"
           status=$(echo "$response" | awk -F'HTTP_STATUS:' 'END{print $2}')
           if [ "$status" != "200" ]; then
